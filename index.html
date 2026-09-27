@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOMERCY Ragnarok Guild Manager</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2canvas Library for Capturing Screenshots -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['Cinzel', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        ro: {
+                            gold: '#f59e0b',
+                            dark: '#0f172a',
+                            panel: '#1e293b',
+                            card: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans bg-slate-950 text-slate-200 antialiased selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-md bg-slate-900 border-l-4 border-amber-500 text-slate-100 p-4 rounded-r-lg shadow-2xl flex items-start gap-3 transition-all duration-300">
+        <div id="toastIcon" class="text-amber-400 text-lg"><i class="fa-solid fa-circle-info"></i></div>
+        <div class="flex-1">
+            <h4 id="toastTitle" class="font-bold text-sm">Notification</h4>
+            <p id="toastMessage" class="text-xs text-slate-300 mt-0.5"></p>
+        </div>
+        <button onclick="hideToast()" class="text-slate-500 hover:text-slate-300 text-xs"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- ================= 1. USERNAME-ONLY LOGIN PAGE ================= -->
+    <div id="view-login" class="min-h-screen w-full flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-950/30 via-slate-950 to-slate-950">
+        <div class="max-w-md w-full bg-slate-900/90 border border-amber-500/30 rounded-2xl shadow-2xl backdrop-blur-md p-8 flex flex-col gap-6">
+            <div class="text-center flex flex-col items-center">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 flex items-center justify-center text-slate-950 font-black font-heading text-3xl shadow-lg shadow-amber-500/20 mb-3">
+                    NM
+                </div>
+                <h1 class="font-heading font-extrabold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-amber-500 tracking-wider">
+                    NOMERCY
+                </h1>
+                <p class="text-xs text-amber-500/80 uppercase tracking-widest font-semibold mt-1">Ragnarok Guild Manager</p>
+                
+                <!-- Cloud Status Banner in Login -->
+                <div id="loginSyncStatus" class="mt-3 flex items-center gap-2 px-3 py-1 bg-slate-950/80 border border-slate-800 rounded-full text-[11px] text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span>Checking Google Sheets connection...</span>
+                </div>
+            </div>
+
+            <!-- Username Only Login Form -->
+            <form onsubmit="handleUsernameLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Username / In-Game Name</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="text" id="loginUsername" placeholder="e.g. vv or registered officer name" required
+                            class="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-1.5">No password needed. Enter your registered username (Master Admin: <strong class="text-amber-400 font-mono">vv</strong>).</p>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In with Username
+                </button>
+            </form>
+
+            <div class="relative flex items-center justify-center my-1">
+                <div class="border-t border-slate-800 w-full"></div>
+                <span class="bg-slate-900 px-3 text-[10px] text-slate-500 uppercase font-semibold absolute">Guest View Mode</span>
+            </div>
+
+            <!-- Guest View Only -->
+            <button onclick="enterAsGuest()" class="w-full py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs text-slate-400 hover:text-slate-200 rounded-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-eye"></i> Continue as Guest / View-Only &rarr;
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= 2. MAIN APPLICATION CONTAINER ================= -->
+    <div id="view-app" class="h-full flex-col hidden">
+        <!-- Header Nav -->
+        <header class="bg-slate-900 border-b border-amber-500/30 sticky top-0 z-40 shadow-lg shadow-black/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Brand & Sync Status -->
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-slate-950 font-bold shadow-md">
+                            <span class="font-heading text-lg">NM</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="font-heading font-extrabold text-base sm:text-lg text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-amber-500 tracking-wider">
+                                    NOMERCY
+                                </h1>
+                                <!-- Live Cloud Status Pill -->
+                                <button onclick="triggerBackendFetch(true)" id="appSyncBadge" title="Click to manually refresh from Google Sheets" class="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] bg-slate-950 border border-slate-800 text-slate-400 hover:border-amber-500/50 cursor-pointer transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    <span id="appSyncText">Live (Sheets)</span>
+                                    <i class="fa-solid fa-rotate text-[9px] ml-0.5 opacity-60"></i>
+                                </button>
+                            </div>
+                            <p class="text-[9px] text-amber-500/80 uppercase tracking-widest -mt-1 font-semibold">Ragnarok Manager</p>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Tabs -->
+                    <nav class="hidden md:flex space-x-1" id="navTabs">
+                        <button onclick="switchTab('roster')" id="tab-roster" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                            <i class="fa-solid fa-users text-xs"></i> Roster (<span id="navRosterCount">0</span>/150)
+                        </button>
+                        <button onclick="switchTab('league')" id="tab-league" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800">
+                            <i class="fa-solid fa-trophy text-xs"></i> League (60)
+                        </button>
+                        <button onclick="switchTab('polarity')" id="tab-polarity" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800">
+                            <i class="fa-solid fa-yin-yang text-xs"></i> Polarity (60)
+                        </button>
+                        <button onclick="switchTab('woe')" id="tab-woe" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800">
+                            <i class="fa-solid fa-chess-knight text-xs"></i> WOE (60)
+                        </button>
+                        <button onclick="switchTab('colors')" id="tab-colors" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800">
+                            <i class="fa-solid fa-palette text-xs"></i> Class Colors
+                        </button>
+                        <button onclick="switchTab('accounts')" id="tab-accounts" class="owner-only hidden nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 text-purple-400 hover:text-purple-300 hover:bg-purple-950/40 border border-purple-800/40">
+                            <i class="fa-solid fa-user-shield text-xs"></i> Officers
+                        </button>
+                    </nav>
+
+                    <!-- User Status & Actions -->
+                    <div class="flex items-center gap-3">
+                        <div id="userInfo" class="flex items-center gap-2"></div>
+
+                        <!-- Manual Cloud Refresh Button -->
+                        <button onclick="triggerBackendFetch(true)" class="p-2 text-slate-400 hover:text-amber-400 rounded-lg hover:bg-slate-800 border border-slate-700/50" title="Refresh from Google Sheets">
+                            <i class="fa-solid fa-arrows-rotate text-xs" id="refreshSpinIcon"></i>
+                        </button>
+
+                        <!-- Data Backup Dropdown -->
+                        <div class="relative group">
+                            <button class="p-2 text-slate-400 hover:text-amber-400 rounded-lg hover:bg-slate-800 border border-slate-700/50" title="Backup & Offline Tools">
+                                <i class="fa-solid fa-database text-xs"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-52 bg-slate-900 rounded-xl border border-slate-700 shadow-xl hidden group-hover:block p-2 z-50">
+                                <button onclick="triggerCloudPushNow()" class="w-full text-left px-3 py-2 text-xs text-amber-400 hover:bg-slate-800 rounded-lg flex items-center gap-2">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Force Push to Sheets
+                                </button>
+                                <button onclick="exportData()" class="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2">
+                                    <i class="fa-solid fa-download text-amber-400"></i> Export JSON File
+                                </button>
+                                <label class="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-upload text-blue-400"></i> Import JSON File
+                                    <input type="file" id="importFileInput" onchange="importData(event)" class="hidden" accept=".json">
+                                </label>
+                            </div>
+                        </div>
+
+                        <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 border border-slate-700/50" title="Logout">
+                            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Sub Nav -->
+            <div class="md:hidden flex overflow-x-auto px-2 py-2 border-t border-slate-800 gap-1 custom-scrollbar">
+                <button onclick="switchTab('roster')" id="mob-tab-roster" class="px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap bg-amber-500/20 text-amber-400">
+                    Roster
+                </button>
+                <button onclick="switchTab('league')" id="mob-tab-league" class="px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap text-slate-400">
+                    League
+                </button>
+                <button onclick="switchTab('polarity')" id="mob-tab-polarity" class="px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap text-slate-400">
+                    Polarity
+                </button>
+                <button onclick="switchTab('woe')" id="mob-tab-woe" class="px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap text-slate-400">
+                    WOE
+                </button>
+                <button onclick="switchTab('colors')" id="mob-tab-colors" class="px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap text-slate-400">
+                    Colors
+                </button>
+                <button onclick="switchTab('accounts')" id="mob-tab-accounts" class="owner-only hidden px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap text-purple-400">
+                    Officers
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
+            
+            <!-- ================= VIEW 1: ROSTER MANAGEMENT ================= -->
+            <section id="view-roster" class="tab-content flex flex-col gap-6">
+                <!-- Stats Overview Bar -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-lg">
+                        <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20">
+                            <i class="fa-solid fa-users text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Roster</p>
+                            <p class="text-2xl font-bold text-slate-100" id="statTotalRoster">0 / 150</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-lg">
+                        <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
+                            <i class="fa-solid fa-user-check text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Active Attending</p>
+                            <p class="text-2xl font-bold text-emerald-400" id="statAttending">0</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-lg">
+                        <div class="p-3 bg-purple-500/10 text-purple-400 rounded-lg border border-purple-500/20">
+                            <i class="fa-solid fa-bolt text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Avg Power Rating</p>
+                            <p class="text-2xl font-bold text-purple-400" id="statAvgPower">0k</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-lg">
+                        <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20">
+                            <i class="fa-solid fa-user-shield text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Registered Officers</p>
+                            <p class="text-2xl font-bold text-blue-400" id="statAdminCount">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls and Actions -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+                    <div class="flex flex-wrap gap-2 flex-1">
+                        <div class="relative flex-1 min-w-[200px]">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                            <input type="text" id="rosterSearch" oninput="renderRoster()" placeholder="Search IGN..." 
+                                class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/50">
+                        </div>
+                        <select id="rosterClassFilter" onchange="renderRoster()" class="bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 px-3 py-2 focus:outline-none focus:border-amber-500/50">
+                            <option value="">All Retained Classes</option>
+                        </select>
+                        <select id="rosterRoleFilter" onchange="renderRoster()" class="bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 px-3 py-2 focus:outline-none focus:border-amber-500/50">
+                            <option value="">All Roles</option>
+                            <option value="Tank">Tank</option>
+                            <option value="DPS">DPS</option>
+                            <option value="Support">Support</option>
+                            <option value="Control">Control</option>
+                            <option value="Utility">Utility</option>
+                        </select>
+                        <select id="rosterSort" onchange="renderRoster()" class="bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 px-3 py-2 focus:outline-none focus:border-amber-500/50">
+                            <option value="power-desc">Power: High -> Low</option>
+                            <option value="power-asc">Power: Low -> High</option>
+                            <option value="ign-asc">IGN: A -> Z</option>
+                        </select>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="deleteAllMembers()" class="admin-only hidden px-3.5 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/50 font-bold text-xs rounded-lg shadow-md transition flex items-center justify-center gap-2" title="Delete All Members">
+                            <i class="fa-solid fa-trash-can"></i> Delete All Members
+                        </button>
+                        <button onclick="openMemberModal()" class="admin-only hidden px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-user-plus"></i> Add Member
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Roster Table -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-lg overflow-hidden">
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider">
+                                <tr>
+                                    <th class="p-3 pl-4">Member / IGN</th>
+                                    <th class="p-3">Job Class</th>
+                                    <th class="p-3">Role</th>
+                                    <th class="p-3 text-center">Level</th>
+                                    <th class="p-3 text-right">Power Rating</th>
+                                    <th class="p-3 text-center">Attendance</th>
+                                    <th class="p-3 pr-4 text-right admin-only hidden">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rosterTableBody" class="divide-y divide-slate-800/60 font-medium">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= VIEW 2: GUILD LEAGUE ================= -->
+            <section id="view-league" class="tab-content hidden flex-col gap-6">
+                <div class="bg-slate-900 border border-amber-500/30 rounded-xl p-5 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded font-bold uppercase">Tactical Organizer</span>
+                            <h2 class="font-heading font-extrabold text-xl text-amber-400">Guild League (15 / 15 / 30 Split)</h2>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Assign 60 warriors into customizable Squads in 5-man parties.</p>
+                    </div>
+
+                    <!-- Actions Bar -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="text-right mr-2 border-r border-slate-800 pr-3">
+                            <p class="text-[10px] text-slate-400 uppercase">League Power</p>
+                            <p class="text-lg font-black text-amber-400" id="leagueTotalPower">0k</p>
+                        </div>
+                        <div class="text-right mr-3">
+                            <p class="text-[10px] text-slate-400 uppercase">Combatants</p>
+                            <p class="text-lg font-black text-emerald-400" id="leagueCombatants">0 / 60</p>
+                        </div>
+
+                        <button onclick="takeTacticalScreenshot('league-capture-board', 'Guild_League_Full_Board', 'GUILD LEAGUE - FULL ROSTER BOARD')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/40 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-camera"></i> 📸 Capture Full Board
+                        </button>
+                        <button onclick="copyLineupSummary('league')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/40 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i> 🔗 Copy Lineup
+                        </button>
+                        <button onclick="clearSquadMode('league')" class="admin-only hidden px-2.5 py-2 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-800/40 rounded-lg text-xs font-semibold transition" title="Clear All Slots">
+                            <i class="fa-solid fa-eraser"></i> Clear All Slots
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Printable Board Wrapper -->
+                <div id="league-capture-board" class="flex flex-col gap-8 bg-slate-950 p-2 rounded-xl">
+                    <!-- Squad A -->
+                    <div id="squadCard-leagueSquadA" class="bg-slate-900/90 border border-amber-500/20 rounded-xl p-4 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-amber-500/20 pb-3 mb-4 gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-heading font-bold text-amber-300 text-lg" id="title-leagueSquadA">Squad A - Main Vanguard (15 Members)</h3>
+                                    <button onclick="promptEditSquadTitle('leagueSquadA')" class="admin-only hidden text-slate-400 hover:text-amber-400 text-xs p-1" title="Edit Squad Name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-slate-400 mt-0.5" id="squadA-stats">Power: 0k | Slots: 0/15</div>
+                            </div>
+                            <button onclick="takeTacticalScreenshot('squadCard-leagueSquadA', 'Guild_League_Squad_A', getSquadTitle('leagueSquadA'))" class="self-start sm:self-auto px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-camera"></i> 📸 Capture Squad
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="leagueSquadA"></div>
+                    </div>
+
+                    <!-- Squad B -->
+                    <div id="squadCard-leagueSquadB" class="bg-slate-900/90 border border-blue-500/20 rounded-xl p-4 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-blue-500/20 pb-3 mb-4 gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-heading font-bold text-blue-300 text-lg" id="title-leagueSquadB">Squad B - Flank & Defense (15 Members)</h3>
+                                    <button onclick="promptEditSquadTitle('leagueSquadB')" class="admin-only hidden text-slate-400 hover:text-amber-400 text-xs p-1" title="Edit Squad Name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-slate-400 mt-0.5" id="squadB-stats">Power: 0k | Slots: 0/15</div>
+                            </div>
+                            <button onclick="takeTacticalScreenshot('squadCard-leagueSquadB', 'Guild_League_Squad_B', getSquadTitle('leagueSquadB'))" class="self-start sm:self-auto px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-camera"></i> 📸 Capture Squad
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="leagueSquadB"></div>
+                    </div>
+
+                    <!-- Squad C -->
+                    <div id="squadCard-leagueSquadC" class="bg-slate-900/90 border border-purple-500/20 rounded-xl p-4 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-purple-500/20 pb-3 mb-4 gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-heading font-bold text-purple-300 text-lg" id="title-leagueSquadC">Squad C - Main Assault Division (30 Members)</h3>
+                                    <button onclick="promptEditSquadTitle('leagueSquadC')" class="admin-only hidden text-slate-400 hover:text-amber-400 text-xs p-1" title="Edit Squad Name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-slate-400 mt-0.5" id="squadC-stats">Power: 0k | Slots: 0/30</div>
+                            </div>
+                            <button onclick="takeTacticalScreenshot('squadCard-leagueSquadC', 'Guild_League_Squad_C', getSquadTitle('leagueSquadC'))" class="self-start sm:self-auto px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-camera"></i> 📸 Capture Squad
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="leagueSquadC"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= VIEW 3: POLARITY ================= -->
+            <section id="view-polarity" class="tab-content hidden flex-col gap-6">
+                <div class="bg-slate-900 border border-indigo-500/30 rounded-xl p-5 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 rounded font-bold uppercase">Faction Balance</span>
+                            <h2 class="font-heading font-extrabold text-xl text-indigo-300">Polarity Tournament (30 / 30 Split)</h2>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Split 60 members into custom Faction/Team lineups.</p>
+                    </div>
+
+                    <!-- Actions Bar -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="text-right mr-2 border-r border-slate-800 pr-3">
+                            <p class="text-[10px] text-slate-400 uppercase">Polarity Power</p>
+                            <p class="text-lg font-black text-indigo-400" id="polarityTotalPower">0k</p>
+                        </div>
+                        <div class="text-right mr-3">
+                            <p class="text-[10px] text-slate-400 uppercase">Combatants</p>
+                            <p class="text-lg font-black text-emerald-400" id="polarityCombatants">0 / 60</p>
+                        </div>
+
+                        <button onclick="takeTacticalScreenshot('polarity-capture-board', 'Polarity_Full_Board', 'POLARITY TOURNAMENT - FULL BOARD')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/40 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-camera"></i> 📸 Capture Full Board
+                        </button>
+                        <button onclick="copyLineupSummary('polarity')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/40 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i> 🔗 Copy Lineup
+                        </button>
+                        <button onclick="clearSquadMode('polarity')" class="admin-only hidden px-2.5 py-2 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-800/40 rounded-lg text-xs font-semibold transition" title="Clear All Slots">
+                            <i class="fa-solid fa-eraser"></i> Clear All Slots
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Printable Board Wrapper -->
+                <div id="polarity-capture-board" class="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-slate-950 p-2 rounded-xl">
+                    <!-- Light Team Card -->
+                    <div id="teamCard-polarityLight" class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-4 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-amber-500/30 pb-3 mb-4 gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-heading font-bold text-amber-300 text-lg" id="title-polarityLight"><i class="fa-solid fa-sun text-amber-400 mr-2"></i> Team Light (30 Members)</h3>
+                                    <button onclick="promptEditSquadTitle('polarityLight')" class="admin-only hidden text-slate-400 hover:text-amber-400 text-xs p-1" title="Edit Team Name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-slate-400 mt-0.5" id="teamLight-stats">Power: 0k | Slots: 0/30</div>
+                            </div>
+                            <button onclick="takeTacticalScreenshot('teamCard-polarityLight', 'Polarity_Team_Light', getSquadTitle('polarityLight'))" class="self-start sm:self-auto px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-camera"></i> 📸 Capture Team
+                            </button>
+                        </div>
+                        <div class="flex flex-col gap-4" id="polarityLight"></div>
+                    </div>
+
+                    <!-- Dark Team Card -->
+                    <div id="teamCard-polarityDark" class="bg-slate-900/90 border border-purple-500/30 rounded-xl p-4 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-purple-500/30 pb-3 mb-4 gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-heading font-bold text-purple-300 text-lg" id="title-polarityDark"><i class="fa-solid fa-moon text-purple-400 mr-2"></i> Team Dark (30 Members)</h3>
+                                    <button onclick="promptEditSquadTitle('polarityDark')" class="admin-only hidden text-slate-400 hover:text-amber-400 text-xs p-1" title="Edit Team Name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-slate-400 mt-0.5" id="teamDark-stats">Power: 0k | Slots: 0/30</div>
+                            </div>
+                            <button onclick="takeTacticalScreenshot('teamCard-polarityDark', 'Polarity_Team_Dark', getSquadTitle('polarityDark'))" class="self-start sm:self-auto px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-camera"></i> 📸 Capture Team
+                            </button>
+                        </div>
+                        <div class="flex flex-col gap-4" id="polarityDark"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= VIEW 4: SIEGE / WOE ================= -->
+            <section id="view-woe" class="tab-content hidden flex-col gap-6">
+                <div class="bg-slate-900 border border-red-500/30 rounded-xl p-5 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] bg-red-500/20 text-red-400 border border-red-500/40 rounded font-bold uppercase">War of Emperium</span>
+                            <h2 class="font-heading font-extrabold text-xl text-red-400">Siege / WOE Squads (12 Parties x 5)</h2>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Deploy 60 combatants across 12 strategic 5-man assault/defense groups.</p>
+                    </div>
+
+                    <!-- Actions Bar -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="text-right mr-2 border-r border-slate-800 pr-3">
+                            <p class="text-[10px] text-slate-400 uppercase">WOE Power</p>
+                            <p class="text-lg font-black text-red-400" id="woeTotalPower">0k</p>
+                        </div>
+                        <div class="text-right mr-3">
+                            <p class="text-[10px] text-slate-400 uppercase">Combatants</p>
+                            <p class="text-lg font-black text-emerald-400" id="woeCombatants">0 / 60</p>
+                        </div>
+
+                        <button onclick="takeTacticalScreenshot('woe-capture-board', 'Siege_WOE_Full_Board', 'WAR OF EMPERIUM - FULL ROSTER BOARD')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-red-400 border border-red-500/40 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-camera"></i> 📸 Capture Full Board
+                        </button>
+                        <button onclick="copyLineupSummary('woe')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/40 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i> 🔗 Copy Lineup
+                        </button>
+                        <button onclick="clearSquadMode('woe')" class="admin-only hidden px-2.5 py-2 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-800/40 rounded-lg text-xs font-semibold transition" title="Clear All Slots">
+                            <i class="fa-solid fa-eraser"></i> Clear All Slots
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Printable Board Wrapper -->
+                <div id="woe-capture-board" class="flex flex-col gap-6 bg-slate-950 p-2 rounded-xl">
+                    <!-- Division 1 (Parties 1-3) -->
+                    <div id="divCard-woe1" class="bg-slate-900/90 border border-red-500/20 rounded-xl p-4 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-red-500/20 pb-3 mb-4 gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-heading font-bold text-red-400 text-lg" id="title-woe1">Division 1 (Parties 1 - 3)</h3>
+                                    <button onclick="promptEditSquadTitle('woe1')" class="admin-only hidden text-slate-400 hover:text-amber-400 text-xs p-1" title="Edit Division Name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-slate-400 mt-0.5" id="woeDiv1-stats">Power: 0k</div>
+                            </div>
+                            <button onclick="takeTacticalScreenshot('divCard-woe1', 'Siege_WOE_Division_1', getSquadTitle('woe1'))" class="self-start sm:self-auto px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-camera"></i> 📸 Capture Div 1
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="woeDiv1"></div>
+                    </div>
+
+                    <!-- Division 2 (Parties 4-6) -->
+                    <div id="divCard-woe2" class="bg-slate-900/90 border border-amber-500/20 rounded-xl p-4 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-amber-500/20 pb-3 mb-4 gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-heading font-bold text-amber-400 text-lg" id="title-woe2">Division 2 (Parties 4 - 6)</h3>
+                                    <button onclick="promptEditSquadTitle('woe2')" class="admin-only hidden text-slate-400 hover:text-amber-400 text-xs p-1" title="Edit Division Name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-slate-400 mt-0.5" id="woeDiv2-stats">Power: 0k</div>
+                            </div>
+                            <button onclick="takeTacticalScreenshot('divCard-woe2', 'Siege_WOE_Division_2', getSquadTitle('woe2'))" class="self-start sm:self-auto px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-camera"></i> 📸 Capture Div 2
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="woeDiv2"></div>
+                    </div>
+
+                    <!-- Division 3 (Parties 7-9) -->
+                    <div id="divCard-woe3" class="bg-slate-900/90 border border-blue-500/20 rounded-xl p-4 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-blue-500/20 pb-3 mb-4 gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-heading font-bold text-blue-400 text-lg" id="title-woe3">Division 3 (Parties 7 - 9)</h3>
+                                    <button onclick="promptEditSquadTitle('woe3')" class="admin-only hidden text-slate-400 hover:text-amber-400 text-xs p-1" title="Edit Division Name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-slate-400 mt-0.5" id="woeDiv3-stats">Power: 0k</div>
+                            </div>
+                            <button onclick="takeTacticalScreenshot('divCard-woe3', 'Siege_WOE_Division_3', getSquadTitle('woe3'))" class="self-start sm:self-auto px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-camera"></i> 📸 Capture Div 3
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="woeDiv3"></div>
+                    </div>
+
+                    <!-- Division 4 (Parties 10-12) -->
+                    <div id="divCard-woe4" class="bg-slate-900/90 border border-purple-500/20 rounded-xl p-4 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-purple-500/20 pb-3 mb-4 gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-heading font-bold text-purple-400 text-lg" id="title-woe4">Division 4 (Parties 10 - 12)</h3>
+                                    <button onclick="promptEditSquadTitle('woe4')" class="admin-only hidden text-slate-400 hover:text-amber-400 text-xs p-1" title="Edit Division Name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-slate-400 mt-0.5" id="woeDiv4-stats">Power: 0k</div>
+                            </div>
+                            <button onclick="takeTacticalScreenshot('divCard-woe4', 'Siege_WOE_Division_4', getSquadTitle('woe4'))" class="self-start sm:self-auto px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-camera"></i> 📸 Capture Div 4
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="woeDiv4"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= VIEW 5: CLASS DESIGNATED COLOR SETTINGS ================= -->
+            <section id="view-colors" class="tab-content hidden flex-col gap-6">
+                <div class="bg-slate-900 border border-amber-500/30 rounded-xl p-5 shadow-lg flex justify-between items-center">
+                    <div>
+                        <h2 class="font-heading font-extrabold text-xl text-amber-400 flex items-center gap-2">
+                            <i class="fa-solid fa-palette"></i> Retained Class Color Customizer
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Customize designated badge colors for each class. Changes auto-sync to all users.</p>
+                    </div>
+                    <button onclick="resetClassColors()" class="admin-only hidden px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700">
+                        Reset Default Colors
+                    </button>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="classColorsGrid"></div>
+                </div>
+            </section>
+
+            <!-- ================= VIEW 6: ACCOUNT & OFFICER MANAGEMENT (GUILD OWNER EXCLUSIVE) ================= -->
+            <section id="view-accounts" class="tab-content hidden flex-col gap-6">
+                <div class="bg-slate-900 border border-purple-500/30 rounded-xl p-5 shadow-lg flex justify-between items-center">
+                    <div>
+                        <h2 class="font-heading font-extrabold text-xl text-purple-400 flex items-center gap-2">
+                            <i class="fa-solid fa-user-gear"></i> Account & Officer Management (Guild Owner)
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Add login usernames for your officers. Changes automatically sync to Google Sheets so they can log in.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Form: Create / Edit User Account -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl flex flex-col gap-4">
+                        <h3 id="accountFormTitle" class="font-heading font-bold text-amber-400 text-sm border-b border-slate-800 pb-2">
+                            Add New Login Account
+                        </h3>
+                        <form onsubmit="saveUserAccount(event)" class="space-y-4">
+                            <input type="hidden" id="editOriginalUsername" value="">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">Username / IGN *</label>
+                                <input type="text" id="accUsername" required placeholder="e.g. Officer_Kael" 
+                                    class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-purple-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">Permission Role *</label>
+                                <select id="accRole" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-purple-500">
+                                    <option value="Officer">Officer / Admin (Full Edit Access)</option>
+                                    <option value="Guild Owner">Guild Owner (Master Access)</option>
+                                    <option value="General Member">General Member (View Only)</option>
+                                </select>
+                            </div>
+                            <div class="flex gap-2 pt-2">
+                                <button type="button" onclick="resetAccountForm()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg font-medium">Clear</button>
+                                <button type="submit" class="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow transition">
+                                    Save & Cloud Sync
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Accounts List -->
+                    <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl flex flex-col gap-4">
+                        <h3 class="font-heading font-bold text-slate-200 text-sm border-b border-slate-800 pb-2">
+                            Registered Login Accounts (Synced to Google Sheets)
+                        </h3>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800 uppercase">
+                                    <tr>
+                                        <th class="p-3">Username</th>
+                                        <th class="p-3">Role Level</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accountsTableBody" class="divide-y divide-slate-800/60 font-medium">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ================= MODAL: CUSTOM CONFIRMATION MODAL ================= -->
+    <div id="customConfirmModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-red-500/40 rounded-2xl max-w-sm w-full shadow-2xl p-6 flex flex-col gap-4">
+            <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
+                <div id="customConfirmIcon" class="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 text-lg">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 id="customConfirmTitle" class="font-heading font-bold text-slate-100 text-base">Confirm Action</h3>
+                    <p class="text-[10px] text-slate-400">Please review before continuing</p>
+                </div>
+            </div>
+            <p id="customConfirmMessage" class="text-xs text-slate-300 leading-relaxed"></p>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg font-medium transition">Cancel</button>
+                <button type="button" id="customConfirmBtn" onclick="handleConfirmModalAction()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: EDIT SQUAD NAME ================= -->
+    <div id="titleEditModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-sm w-full shadow-2xl p-6 flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-heading font-bold text-amber-400 text-base">Rename Squad / Team</h3>
+                <button onclick="closeTitleModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="hidden" id="editSquadKey">
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">Enter New Name</label>
+                <input type="text" id="newSquadTitleInput" placeholder="e.g. Strike Squad 1" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeTitleModal()" class="px-3 py-1.5 bg-slate-800 text-slate-300 text-xs rounded-lg font-medium">Cancel</button>
+                <button onclick="saveSquadTitle()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-lg shadow">Save Title</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: SCREENSHOT PREVIEW ================= -->
+    <div id="screenshotModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-amber-400 text-lg"></i>
+                    <h3 class="font-heading font-bold text-amber-400 text-base">Tactical Lineup Captured</h3>
+                </div>
+                <button onclick="closeScreenshotModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="p-4 flex-1 overflow-y-auto custom-scrollbar flex items-center justify-center bg-slate-950/60">
+                <img id="screenshotImagePreview" class="max-w-full h-auto rounded-lg border border-slate-800 shadow-2xl" alt="Lineup Screenshot">
+            </div>
+
+            <div class="p-4 bg-slate-900 border-t border-slate-800 flex justify-between items-center gap-4">
+                <p class="text-xs text-slate-400 italic">High-res PNG generated with full IGN text.</p>
+                <div class="flex gap-3">
+                    <button onclick="closeScreenshotModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold">Close</button>
+                    <a id="downloadScreenshotBtn" href="#" download="Tactical_Lineup.png" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-download"></i> Download Image
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: MEMBER ADD/EDIT ================= -->
+    <div id="memberModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/30 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+                <h3 id="modalTitle" class="font-heading font-bold text-amber-400 text-lg">Add Guild Member</h3>
+                <button onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="memberForm" onsubmit="saveMember(event)" class="p-6 space-y-4">
+                <input type="hidden" id="memberId">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">In-Game Name (IGN) *</label>
+                    <input type="text" id="memberIgn" required placeholder="e.g. ShadowKnight" 
+                        class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Job Class *</label>
+                        <select id="memberClass" required onchange="autoAssignRole()" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Role *</label>
+                        <select id="memberRole" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                            <option value="Tank">Tank</option>
+                            <option value="DPS">DPS</option>
+                            <option value="Support">Support</option>
+                            <option value="Control">Control</option>
+                            <option value="Utility">Utility</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Level (1-120)</label>
+                        <input type="number" id="memberLevel" min="1" max="120" value="95" required
+                            class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Power Rating (k)</label>
+                        <input type="number" id="memberPower" min="1" max="9999" value="150" required
+                            class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Attendance Status</label>
+                    <select id="memberAttendance" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                        <option value="Attending">Attending (Confirmed)</option>
+                        <option value="Tentative">Tentative</option>
+                        <option value="Absent">Absent</option>
+                    </select>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" onclick="closeMemberModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-700">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs shadow-md">Save Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= 3. APPLICATION JAVASCRIPT LOGIC ================= -->
+    <script>
+        const STORAGE_KEY = 'nomercy_ro_guild_manager_v2';
+
+        const ALLOWED_CLASSES = [
+            "Lord Knight", "Paladin", "High Priest", "Champion",
+            "High Wizard", "Scholar", "Sniper", "Bard",
+            "Dancer", "Assassin Cross", "Stalker", "Mastersmith",
+            "Biochemist", "Gunslinger", "Ninja", "Druid"
+        ];
+
+        const JOB_ROLE_MAP = {
+            "Lord Knight": "Tank",
+            "Paladin": "Tank",
+            "High Priest": "Support",
+            "Champion": "DPS",
+            "High Wizard": "DPS",
+            "Scholar": "Control",
+            "Sniper": "DPS",
+            "Bard": "Support",
+            "Dancer": "Support",
+            "Assassin Cross": "DPS",
+            "Stalker": "Control",
+            "Mastersmith": "Utility",
+            "Biochemist": "DPS",
+            "Gunslinger": "DPS",
+            "Ninja": "DPS",
+            "Druid": "Support"
+        };
+
+        const ROLE_BADGE_CLASSES = {
+            "Tank": "bg-blue-950/60 text-blue-300 border-blue-800/50",
+            "DPS": "bg-red-950/60 text-red-300 border-red-800/50",
+            "Support": "bg-emerald-950/60 text-emerald-300 border-emerald-800/50",
+            "Control": "bg-purple-950/60 text-purple-300 border-purple-800/50",
+            "Utility": "bg-amber-950/60 text-amber-300 border-amber-800/50"
+        };
+
+        const DEFAULT_CLASS_COLORS = {
+            "Lord Knight": "#3b82f6",
+            "Paladin": "#0ea5e9",
+            "High Priest": "#10b981",
+            "Champion": "#f97316",
+            "High Wizard": "#8b5cf6",
+            "Scholar": "#06b6d4",
+            "Sniper": "#22c55e",
+            "Bard": "#eab308",
+            "Dancer": "#ec4899",
+            "Assassin Cross": "#ef4444",
+            "Stalker": "#64748b",
+            "Mastersmith": "#d97706",
+            "Biochemist": "#14b8a6",
+            "Gunslinger": "#f43f5e",
+            "Ninja": "#6366f1",
+            "Druid": "#84cc16"
+        };
+
+        const DEFAULT_SQUAD_TITLES = {
+            "leagueSquadA": "Squad A - Main Vanguard (15 Members)",
+            "leagueSquadB": "Squad B - Flank & Defense (15 Members)",
+            "leagueSquadC": "Squad C - Main Assault Division (30 Members)",
+            "polarityLight": "Team Light (30 Members)",
+            "polarityDark": "Team Dark (30 Members)",
+            "woe1": "Division 1 (Parties 1 - 3)",
+            "woe2": "Division 2 (Parties 4 - 6)",
+            "woe3": "Division 3 (Parties 7 - 9)",
+            "woe4": "Division 4 (Parties 10 - 12)"
+        };
+
+        let members = [];
+        let squadAssignments = { league: {}, polarity: {}, woe: {} };
+        let classColors = { ...DEFAULT_CLASS_COLORS };
+        let userAccounts = [{ username: "vv", role: "Guild Owner" }];
+        let squadTitles = { ...DEFAULT_SQUAD_TITLES };
+        let currentAuth = null;
+        let confirmActionCallback = null;
+        let isSyncingWithCloud = false;
+
+        // Check if running inside Google Apps Script environment
+        function isAppsScriptEnvironment() {
+            return typeof google !== 'undefined' && google.script && typeof google.script.run !== 'undefined';
+        }
+
+        // ================= CLOUD SYNC LOGIC =================
+        function updateSyncBadge(status, text) {
+            const badge = document.getElementById('appSyncBadge');
+            const syncText = document.getElementById('appSyncText');
+            const loginStatus = document.getElementById('loginSyncStatus');
+            const spinIcon = document.getElementById('refreshSpinIcon');
+
+            if (status === 'syncing') {
+                if (spinIcon) spinIcon.classList.add('fa-spin');
+                if (badge) {
+                    badge.classList.remove('border-emerald-500/50', 'border-red-500/50');
+                    badge.classList.add('border-amber-500/50');
+                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span><span>${text || 'Syncing...'}</span>`;
+                }
+                if (loginStatus) {
+                    loginStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span>Connecting to Google Sheets...</span>`;
+                }
+            } else if (status === 'online') {
+                if (spinIcon) spinIcon.classList.remove('fa-spin');
+                if (badge) {
+                    badge.classList.remove('border-amber-500/50', 'border-red-500/50');
+                    badge.classList.add('border-emerald-500/50');
+                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>${text || 'Live (Sheets)'}</span><i class="fa-solid fa-rotate text-[9px] ml-0.5 opacity-60"></i>`;
+                }
+                if (loginStatus) {
+                    loginStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="text-emerald-400">Connected to Google Sheets (${userAccounts.length} accounts loaded)</span>`;
+                }
+            } else {
+                if (spinIcon) spinIcon.classList.remove('fa-spin');
+                if (badge) {
+                    badge.classList.remove('border-emerald-500/50', 'border-amber-500/50');
+                    badge.classList.add('border-slate-800');
+                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span>${text || 'Local Mode'}</span>`;
+                }
+                if (loginStatus) {
+                    loginStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>Offline / Local Mode</span>`;
+                }
+            }
+        }
+
+        // Pull fresh data from Google Sheets
+        function triggerBackendFetch(showUserToast = false) {
+            if (isAppsScriptEnvironment()) {
+                updateSyncBadge('syncing', 'Fetching Sheets...');
+                if (showUserToast) showToast("Syncing...", "Fetching live data from Google Sheets...", "info");
+
+                google.script.run
+                    .withSuccessHandler((response) => {
+                        handleBackendDataSuccess(response, showUserToast);
+                    })
+                    .withFailureHandler((error) => {
+                        console.warn("Apps Script sync failed:", error);
+                        updateSyncBadge('offline', 'Sheets Error');
+                        if (showUserToast) showToast("Sync Issue", "Could not reach Google Sheets. Working with cached data.", "warning");
+                    })
+                    .getGuildData();
+            } else {
+                updateSyncBadge('offline', 'Standalone / Local');
+            }
+        }
+
+        function handleBackendDataSuccess(res, showUserToast) {
+            if (res && res.success) {
+                if (Array.isArray(res.members)) members = res.members;
+                if (res.squadAssignments) squadAssignments = res.squadAssignments;
+                if (Array.isArray(res.userAccounts) && res.userAccounts.length > 0) userAccounts = res.userAccounts;
+                if (res.classColors) classColors = { ...DEFAULT_CLASS_COLORS, ...res.classColors };
+                if (res.squadTitles) squadTitles = { ...DEFAULT_SQUAD_TITLES, ...res.squadTitles };
+
+                saveLocalCache();
+                renderAllViews();
+                updateSyncBadge('online', 'Live (Sheets)');
+
+                if (showUserToast) {
+                    showToast("Live Sync Complete", `Synchronized ${members.length} members from Google Sheets.`, "success");
+                }
+            }
+        }
+
+        // Push local changes to Google Sheets
+        function triggerCloudPushNow() {
+            if (!isAppsScriptEnvironment()) {
+                showToast("Local Environment", "Data saved in local browser storage.", "info");
+                return;
+            }
+
+            updateSyncBadge('syncing', 'Saving to Sheets...');
+
+            const payload = {
+                members,
+                squadAssignments,
+                userAccounts,
+                classColors,
+                squadTitles,
+                syncedBy: currentAuth ? currentAuth.username : 'User'
+            };
+
+            google.script.run
+                .withSuccessHandler((res) => {
+                    updateSyncBadge('online', 'Saved to Sheets');
+                    showToast("Google Sheets Updated", "All members and assignments synced across all officers.", "success");
+                })
+                .withFailureHandler((err) => {
+                    console.error("Cloud push failed:", err);
+                    updateSyncBadge('offline', 'Push Failed');
+                    showToast("Cloud Push Failed", "Saved locally, but Google Sheets returned an error.", "error");
+                })
+                .syncAllGuildData(payload);
+        }
+
+        // Debounced auto-save to cloud
+        let cloudSyncTimeout = null;
+        function autoSyncToCloud() {
+            saveLocalCache();
+            if (isAppsScriptEnvironment()) {
+                clearTimeout(cloudSyncTimeout);
+                updateSyncBadge('syncing', 'Syncing...');
+                cloudSyncTimeout = setTimeout(() => {
+                    const payload = {
+                        members,
+                        squadAssignments,
+                        userAccounts,
+                        classColors,
+                        squadTitles,
+                        syncedBy: currentAuth ? currentAuth.username : 'User'
+                    };
+
+                    google.script.run
+                        .withSuccessHandler(() => {
+                            updateSyncBadge('online', 'Live (Sheets)');
+                        })
+                        .withFailureHandler((err) => {
+                            console.error("Auto cloud sync error:", err);
+                            updateSyncBadge('offline', 'Sync Error');
+                        })
+                        .syncAllGuildData(payload);
+                }, 1000);
+            }
+        }
+
+        function saveLocalCache() {
+            try {
+                const data = {
+                    members,
+                    squadAssignments,
+                    classColors,
+                    userAccounts,
+                    squadTitles,
+                    currentAuth
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch (err) {
+                console.error("Failed to save state to localStorage", err);
+            }
+        }
+
+        function loadFromStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed.members) && parsed.members.length > 0) {
+                        members = parsed.members;
+                    }
+                    if (parsed.squadAssignments) squadAssignments = parsed.squadAssignments;
+                    if (parsed.classColors) classColors = { ...DEFAULT_CLASS_COLORS, ...parsed.classColors };
+                    if (Array.isArray(parsed.userAccounts) && parsed.userAccounts.length > 0) {
+                        userAccounts = parsed.userAccounts;
+                    }
+                    if (parsed.squadTitles) squadTitles = { ...DEFAULT_SQUAD_TITLES, ...parsed.squadTitles };
+                    if (parsed.currentAuth) currentAuth = parsed.currentAuth;
+                } else {
+                    members = generateDefaultMockMembers();
+                    classColors = { ...DEFAULT_CLASS_COLORS };
+                    userAccounts = [{ username: "vv", role: "Guild Owner" }];
+                    squadTitles = { ...DEFAULT_SQUAD_TITLES };
+                    saveLocalCache();
+                }
+            } catch (err) {
+                console.error("Failed to load from storage:", err);
+                members = generateDefaultMockMembers();
+            }
+        }
+
+        function saveToStorage() {
+            autoSyncToCloud();
+        }
+
+        // ================= UI & MODALS =================
+        function showConfirmModal(title, message, onConfirm, isDanger = true) {
+            document.getElementById('customConfirmTitle').innerText = title;
+            document.getElementById('customConfirmMessage').innerText = message;
+            confirmActionCallback = onConfirm;
+
+            const confirmBtn = document.getElementById('customConfirmBtn');
+            const iconEl = document.getElementById('customConfirmIcon');
+
+            if (isDanger) {
+                confirmBtn.className = "px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow transition";
+                iconEl.className = "w-10 h-10 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 text-lg";
+                iconEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+            } else {
+                confirmBtn.className = "px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-lg shadow transition";
+                iconEl.className = "w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-lg";
+                iconEl.innerHTML = `<i class="fa-solid fa-circle-question"></i>`;
+            }
+
+            const modal = document.getElementById('customConfirmModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            confirmActionCallback = null;
+            const modal = document.getElementById('customConfirmModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function handleConfirmModalAction() {
+            if (typeof confirmActionCallback === 'function') {
+                const action = confirmActionCallback;
+                confirmActionCallback = null;
+                closeConfirmModal();
+                action();
+            } else {
+                closeConfirmModal();
+            }
+        }
+
+        function clearSquadMode(mode) {
+            const modeLabel = mode === 'league' ? 'Guild League' : mode === 'polarity' ? 'Polarity' : 'Siege / WOE';
+
+            showConfirmModal(
+                `Clear ${modeLabel}?`,
+                `Are you sure you want to clear all member assignments in ${modeLabel}? This will reset all 60 slots in this organizer to empty.`,
+                () => {
+                    squadAssignments[mode] = {};
+                    saveToStorage();
+                    renderAllViews();
+                    showToast("Slots Cleared", `All party assignments in ${modeLabel} have been reset to empty.`, "success");
+                },
+                true
+            );
+        }
+
+        function promptEditSquadTitle(key) {
+            if (!currentAuth) return;
+            document.getElementById('editSquadKey').value = key;
+            document.getElementById('newSquadTitleInput').value = squadTitles[key] || DEFAULT_SQUAD_TITLES[key] || "";
+            const modal = document.getElementById('titleEditModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTitleModal() {
+            const modal = document.getElementById('titleEditModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveSquadTitle() {
+            const key = document.getElementById('editSquadKey').value;
+            const newTitle = document.getElementById('newSquadTitleInput').value.trim();
+
+            if (key && newTitle) {
+                squadTitles[key] = newTitle;
+                saveToStorage();
+                renderAllSquadTitles();
+                closeTitleModal();
+                showToast("Squad Name Updated", `Updated to "${newTitle}"`, "success");
+            }
+        }
+
+        function getSquadTitle(key) {
+            return squadTitles[key] || DEFAULT_SQUAD_TITLES[key] || key;
+        }
+
+        function renderAllSquadTitles() {
+            Object.keys(DEFAULT_SQUAD_TITLES).forEach(key => {
+                const el = document.getElementById(`title-${key}`);
+                if (el) {
+                    const titleText = getSquadTitle(key);
+                    if (key.startsWith('polarityLight')) {
+                        el.innerHTML = `<i class="fa-solid fa-sun text-amber-400 mr-2"></i> ${titleText}`;
+                    } else if (key.startsWith('polarityDark')) {
+                        el.innerHTML = `<i class="fa-solid fa-moon text-purple-400 mr-2"></i> ${titleText}`;
+                    } else {
+                        el.innerText = titleText;
+                    }
+                }
+            });
+        }
+
+        // ================= AUTHENTICATION =================
+        function showLoginScreen() {
+            document.getElementById('view-login').classList.remove('hidden');
+            document.getElementById('view-app').classList.add('hidden');
+            document.getElementById('view-app').classList.remove('flex');
+        }
+
+        function showAppScreen() {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-app').classList.remove('hidden');
+            document.getElementById('view-app').classList.add('flex');
+            renderAuthHeader();
+            renderAllViews();
+        }
+
+        function handleUsernameLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('loginUsername').value.trim();
+
+            if (!usernameInput) return;
+
+            const match = userAccounts.find(a => a.username.toLowerCase() === usernameInput.toLowerCase());
+
+            if (match) {
+                currentAuth = { username: match.username, role: match.role };
+                saveLocalCache();
+                showAppScreen();
+                showToast("Welcome Back", `Logged in as ${match.username} (${match.role})`, "success");
+            } else if (usernameInput.toLowerCase() === 'vv') {
+                currentAuth = { username: "vv", role: "Guild Owner" };
+                if (!userAccounts.some(a => a.username.toLowerCase() === 'vv')) {
+                    userAccounts.push({ username: "vv", role: "Guild Owner" });
+                }
+                saveToStorage();
+                showAppScreen();
+                showToast("Guild Owner Access", "Logged in as 'vv' (Master Admin / Guild Owner).", "success");
+            } else {
+                showToast("User Not Found", `Username '${usernameInput}' is not registered yet in Google Sheets. Ask 'vv' to add your username.`, "error");
+            }
+        }
+
+        function enterAsGuest() {
+            currentAuth = null;
+            saveLocalCache();
+            showAppScreen();
+            showToast("Guest Mode", "Viewing as Guest. Editing controls disabled.", "info");
+        }
+
+        function logout() {
+            currentAuth = null;
+            saveLocalCache();
+            showLoginScreen();
+            showToast("Logged Out", "Returned to login screen.", "info");
+        }
+
+        function renderAuthHeader() {
+            const container = document.getElementById('userInfo');
+            const isOwner = currentAuth && (currentAuth.role === 'Guild Owner' || currentAuth.username.toLowerCase() === 'vv');
+            const isAdmin = currentAuth !== null && (isOwner || currentAuth.role === 'Officer');
+
+            if (currentAuth) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-lg">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-xs font-bold text-amber-400">${currentAuth.username} (${currentAuth.role})</span>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <span class="text-xs text-slate-400 bg-slate-900 border border-slate-800 px-3 py-1 rounded-lg">Guest Mode</span>
+                `;
+            }
+
+            if (isAdmin) {
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+            } else {
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+            }
+
+            if (isOwner) {
+                document.querySelectorAll('.owner-only').forEach(el => el.classList.remove('hidden'));
+            } else {
+                document.querySelectorAll('.owner-only').forEach(el => el.classList.add('hidden'));
+            }
+        }
+
+        // ================= SCREENSHOTS & SHARING =================
+        function takeTacticalScreenshot(elementId, filePrefix = "Tactical_Lineup", titleBanner = "") {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            showToast("Capturing High-Res Screenshot...", "Formatting visible player names...", "info");
+
+            html2canvas(element, {
+                backgroundColor: '#020617',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                onclone: (clonedDoc) => {
+                    const clonedTarget = clonedDoc.getElementById(elementId);
+                    if (!clonedTarget) return;
+
+                    const buttons = clonedTarget.querySelectorAll('button');
+                    buttons.forEach(btn => btn.style.display = 'none');
+
+                    if (titleBanner) {
+                        const headerDiv = clonedDoc.createElement('div');
+                        headerDiv.className = 'w-full bg-gradient-to-r from-amber-950 via-slate-900 to-amber-950 border border-amber-500/40 p-4 rounded-xl mb-4 flex justify-between items-center shadow-lg';
+                        headerDiv.innerHTML = `
+                            <div>
+                                <h1 class="font-heading text-lg font-black text-amber-400 tracking-wider">NOMERCY GUILD • TACTICAL ROSTER</h1>
+                                <p class="text-xs font-bold text-slate-200">${titleBanner}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] uppercase text-amber-500 font-bold block">Ragnarok Online</span>
+                                <span class="text-xs text-slate-400 font-mono">${new Date().toISOString().slice(0, 10)}</span>
+                            </div>
+                        `;
+                        clonedTarget.insertBefore(headerDiv, clonedTarget.firstChild);
+                    }
+
+                    const selects = clonedTarget.querySelectorAll('select');
+                    selects.forEach(sel => {
+                        const val = sel.value;
+
+                        const textDiv = clonedDoc.createElement('div');
+                        textDiv.className = 'w-full py-1.5 px-2 bg-slate-900/90 border border-amber-500/30 rounded text-xs font-bold text-amber-300 truncate shadow-inner';
+
+                        if (val) {
+                            const member = members.find(m => m.id === val);
+                            if (member) {
+                                textDiv.innerHTML = `<span class="text-white font-extrabold">${member.ign}</span> <span class="text-[10px] text-amber-400/80 font-mono font-normal">(${member.power}k)</span>`;
+                            } else {
+                                textDiv.innerHTML = `<span class="text-slate-400 font-normal italic">Selected Member</span>`;
+                            }
+                        } else {
+                            textDiv.innerHTML = `<span class="text-slate-600 font-normal italic">-- Empty Slot --</span>`;
+                        }
+
+                        sel.replaceWith(textDiv);
+                    });
+                }
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const modal = document.getElementById('screenshotModal');
+                const previewImg = document.getElementById('screenshotImagePreview');
+                const downloadBtn = document.getElementById('downloadScreenshotBtn');
+
+                previewImg.src = imgData;
+                const fileName = `${filePrefix}_${new Date().toISOString().slice(0, 10)}.png`;
+                downloadBtn.href = imgData;
+                downloadBtn.download = fileName;
+
+                const tempLink = document.createElement('a');
+                tempLink.href = imgData;
+                tempLink.download = fileName;
+                document.body.appendChild(tempLink);
+                tempLink.click();
+                document.body.removeChild(tempLink);
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                showToast("Screenshot Saved!", "PNG downloaded with clear IGN names.", "success");
+            }).catch(err => {
+                console.error(err);
+                showToast("Screenshot Failed", "Unable to capture image.", "error");
+            });
+        }
+
+        function closeScreenshotModal() {
+            const modal = document.getElementById('screenshotModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function copyLineupSummary(mode) {
+            let mainTitle = mode === 'league' ? 'NOMERCY Guild League Lineup' :
+                        mode === 'polarity' ? 'NOMERCY Polarity Lineup' : 'NOMERCY Siege / WOE Lineup';
+
+            let outputText = `⚔️ *** ${mainTitle.toUpperCase()} *** ⚔️\n\n`;
+
+            if (mode === 'league') {
+                const squads = [
+                    { prefix: 'squadA', key: 'leagueSquadA', numParties: 3 },
+                    { prefix: 'squadB', key: 'leagueSquadB', numParties: 3 },
+                    { prefix: 'squadC', key: 'leagueSquadC', numParties: 6 }
+                ];
+
+                squads.forEach(sq => {
+                    outputText += `--- ${getSquadTitle(sq.key)} ---\n`;
+                    for (let p = 1; p <= sq.numParties; p++) {
+                        outputText += `Party ${p}:\n`;
+                        for (let s = 1; s <= 5; s++) {
+                            const key = `${sq.prefix}_p${p}_s${s}`;
+                            const mId = squadAssignments.league[key];
+                            const member = members.find(m => m.id === mId);
+                            if (member) {
+                                outputText += `  • [${member.jobClass}] ${member.ign} (${member.power}k)\n`;
+                            } else {
+                                outputText += `  • [EMPTY]\n`;
+                            }
+                        }
+                    }
+                    outputText += `\n`;
+                });
+            } else if (mode === 'polarity') {
+                const teams = [
+                    { prefix: 'light', key: 'polarityLight', numParties: 6 },
+                    { prefix: 'dark', key: 'polarityDark', numParties: 6 }
+                ];
+
+                teams.forEach(t => {
+                    outputText += `--- ${getSquadTitle(t.key)} ---\n`;
+                    for (let p = 1; p <= t.numParties; p++) {
+                        outputText += `Party ${p}:\n`;
+                        for (let s = 1; s <= 5; s++) {
+                            const key = `${t.prefix}_p${p}_s${s}`;
+                            const mId = squadAssignments.polarity[key];
+                            const member = members.find(m => m.id === mId);
+                            if (member) {
+                                outputText += `  • [${member.jobClass}] ${member.ign} (${member.power}k)\n`;
+                            } else {
+                                outputText += `  • [EMPTY]\n`;
+                            }
+                        }
+                    }
+                    outputText += `\n`;
+                });
+            } else if (mode === 'woe') {
+                const divs = [
+                    { key: 'woe1', start: 1, end: 3 },
+                    { key: 'woe2', start: 4, end: 6 },
+                    { key: 'woe3', start: 7, end: 9 },
+                    { key: 'woe4', start: 10, end: 12 }
+                ];
+
+                divs.forEach(d => {
+                    outputText += `--- ${getSquadTitle(d.key)} ---\n`;
+                    for (let p = d.start; p <= d.end; p++) {
+                        outputText += `Party ${p}:\n`;
+                        for (let s = 1; s <= 5; s++) {
+                            const key = `woe_p${p}_s${s}`;
+                            const mId = squadAssignments.woe[key];
+                            const member = members.find(m => m.id === mId);
+                            if (member) {
+                                outputText += `  • [${member.jobClass}] ${member.ign} (${member.power}k)\n`;
+                            } else {
+                                outputText += `  • [EMPTY]\n`;
+                            }
+                        }
+                    }
+                    outputText += `\n`;
+                });
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = outputText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            showToast("Copied to Clipboard!", "Lineup summary ready to paste into Discord.", "success");
+        }
+
+        // ================= USER ACCOUNT MANAGEMENT =================
+        function renderAccountsTable() {
+            const tableBody = document.getElementById('accountsTableBody');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = userAccounts.map(acc => {
+                const isOwner = acc.username.toLowerCase() === 'vv';
+                return `
+                    <tr class="hover:bg-slate-800/40">
+                        <td class="p-3 font-bold text-slate-200">
+                            ${acc.username} ${isOwner ? '<span class="ml-1 px-1.5 py-0.2 text-[9px] bg-amber-500 text-slate-950 font-black rounded">OWNER</span>' : ''}
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${acc.role === 'Guild Owner' ? 'bg-amber-950 text-amber-400 border border-amber-800/50' : 'bg-purple-950 text-purple-300 border border-purple-800/50'}">
+                                ${acc.role}
+                            </span>
+                        </td>
+                        <td class="p-3 text-right">
+                            ${isOwner ? '<span class="text-[10px] text-slate-500 italic">Protected</span>' : `
+                                <button onclick="editUserAccount('${acc.username}')" class="p-1 text-slate-400 hover:text-amber-400 mr-2"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="removeUserAccount('${acc.username}')" class="p-1 text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function saveUserAccount(e) {
+            e.preventDefault();
+            if (!currentAuth || (currentAuth.role !== 'Guild Owner' && currentAuth.username.toLowerCase() !== 'vv')) {
+                showToast("Permission Denied", "Only the Guild Owner ('vv') can manage accounts.", "error");
+                return;
+            }
+
+            const orig = document.getElementById('editOriginalUsername').value;
+            const newUsername = document.getElementById('accUsername').value.trim();
+            const newRole = document.getElementById('accRole').value;
+
+            if (orig) {
+                const idx = userAccounts.findIndex(a => a.username.toLowerCase() === orig.toLowerCase());
+                if (idx !== -1) {
+                    userAccounts[idx] = { username: newUsername, role: newRole };
+                    showToast("Account Updated", `Updated ${newUsername}`, "success");
+                }
+            } else {
+                if (userAccounts.some(a => a.username.toLowerCase() === newUsername.toLowerCase())) {
+                    showToast("Duplicate Username", "This username is already registered.", "warning");
+                    return;
+                }
+                userAccounts.push({ username: newUsername, role: newRole });
+                showToast("Account Created", `Added user '${newUsername}' (${newRole})`, "success");
+            }
+
+            saveToStorage();
+            resetAccountForm();
+            renderAccountsTable();
+            renderRoster();
+        }
+
+        function editUserAccount(username) {
+            const acc = userAccounts.find(a => a.username === username);
+            if (!acc) return;
+
+            document.getElementById('accountFormTitle').innerText = `Edit Account: ${username}`;
+            document.getElementById('editOriginalUsername').value = acc.username;
+            document.getElementById('accUsername').value = acc.username;
+            document.getElementById('accRole').value = acc.role;
+        }
+
+        function removeUserAccount(username) {
+            if (username.toLowerCase() === 'vv') return;
+
+            showConfirmModal(
+                "Remove Account",
+                `Are you sure you want to remove login privileges for '${username}'?`,
+                () => {
+                    userAccounts = userAccounts.filter(a => a.username !== username);
+                    saveToStorage();
+                    renderAccountsTable();
+                    renderRoster();
+                    showToast("Account Removed", `${username} deleted.`, "info");
+                },
+                true
+            );
+        }
+
+        function resetAccountForm() {
+            document.getElementById('accountFormTitle').innerText = "Add New Login Account";
+            document.getElementById('editOriginalUsername').value = "";
+            document.getElementById('accUsername').value = "";
+            document.getElementById('accRole').value = "Officer";
+        }
+
+        // ================= CLASS COLORS =================
+        function renderClassColorsSettings() {
+            const grid = document.getElementById('classColorsGrid');
+            if (!grid) return;
+
+            grid.innerHTML = ALLOWED_CLASSES.map(c => {
+                const hexColor = classColors[c] || DEFAULT_CLASS_COLORS[c] || "#3b82f6";
+                return `
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between shadow">
+                        <div>
+                            <p class="text-xs font-bold text-slate-200">${c}</p>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold mt-1 inline-block" style="background-color: ${hexColor}20; color: ${hexColor}; border: 1px solid ${hexColor}50">
+                                Sample Badge
+                            </span>
+                        </div>
+                        <input type="color" value="${hexColor}" onchange="updateClassColor('${c}', this.value)" 
+                            class="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer">
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateClassColor(jobClass, colorHex) {
+            classColors[jobClass] = colorHex;
+            saveToStorage();
+            renderAllViews();
+            showToast("Color Updated", `Custom color for ${jobClass} saved.`, "success");
+        }
+
+        function resetClassColors() {
+            showConfirmModal(
+                "Reset Colors",
+                "Reset all job class badge colors back to default theme values?",
+                () => {
+                    classColors = { ...DEFAULT_CLASS_COLORS };
+                    saveToStorage();
+                    renderClassColorsSettings();
+                    renderAllViews();
+                    showToast("Colors Reset", "Default job class colors restored.", "info");
+                },
+                false
+            );
+        }
+
+        function generateDefaultMockMembers() {
+            const names = [
+                "vv", "Valiant", "Aegis", "Gideon", "Sera", "Kaelen", "Zero", "Nova", "Ignis", "Rune",
+                "Ashen", "Cipher", "Vortex", "Blight", "Kaiser", "Eclipse", "Lumina", "Zephyr", "Ragnar", "Odin"
+            ];
+
+            const mockList = [];
+            for (let i = 1; i <= 60; i++) {
+                const randomClass = ALLOWED_CLASSES[Math.floor(Math.random() * ALLOWED_CLASSES.length)];
+                const ign = i === 1 ? "vv" : (names[i - 2] || `Warrior_${i}`);
+                const role = JOB_ROLE_MAP[randomClass] || "DPS";
+                mockList.push({
+                    id: "m_" + Date.now() + "_" + i,
+                    ign: ign,
+                    jobClass: randomClass,
+                    role: role,
+                    level: Math.floor(Math.random() * 20) + 95,
+                    power: Math.floor(Math.random() * 100) + 140,
+                    attendance: i <= 52 ? "Attending" : (i <= 57 ? "Tentative" : "Absent")
+                });
+            }
+            return mockList;
+        }
+
+        function populateClassDropdowns() {
+            const rosterFilter = document.getElementById('rosterClassFilter');
+            const modalSelect = document.getElementById('memberClass');
+
+            let classOptionsHTML = ALLOWED_CLASSES.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            if (rosterFilter) rosterFilter.innerHTML = `<option value="">All Retained Classes</option>` + classOptionsHTML;
+            if (modalSelect) modalSelect.innerHTML = classOptionsHTML;
+        }
+
+        function autoAssignRole() {
+            const selectedClass = document.getElementById('memberClass').value;
+            if (JOB_ROLE_MAP[selectedClass]) {
+                document.getElementById('memberRole').value = JOB_ROLE_MAP[selectedClass];
+            }
+        }
+
+        function renderRoster() {
+            const tableBody = document.getElementById('rosterTableBody');
+            if (!tableBody) return;
+
+            const search = document.getElementById('rosterSearch').value.toLowerCase();
+            const classFilter = document.getElementById('rosterClassFilter').value;
+            const roleFilter = document.getElementById('rosterRoleFilter').value;
+            const sortVal = document.getElementById('rosterSort').value;
+
+            let filtered = members.filter(m => {
+                const matchSearch = m.ign.toLowerCase().includes(search);
+                const matchClass = classFilter ? m.jobClass === classFilter : true;
+                const matchRole = roleFilter ? m.role === roleFilter : true;
+                return matchSearch && matchClass && matchRole;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortVal === 'power-desc') return b.power - a.power;
+                if (sortVal === 'power-asc') return a.power - b.power;
+                if (sortVal === 'ign-asc') return a.ign.localeCompare(b.ign);
+                return 0;
+            });
+
+            document.getElementById('navRosterCount').innerText = members.length;
+            document.getElementById('statTotalRoster').innerText = `${members.length} / 150`;
+            document.getElementById('statAttending').innerText = members.filter(m => m.attendance === 'Attending').length;
+            document.getElementById('statAdminCount').innerText = userAccounts.length;
+
+            const avgPwr = members.length ? Math.round(members.reduce((acc, m) => acc + m.power, 0) / members.length) : 0;
+            document.getElementById('statAvgPower').innerText = `${avgPwr}k`;
+
+            const isAdmin = currentAuth !== null;
+
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-slate-500">
+                            No members found matching selected filters.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = filtered.map(m => {
+                const hexColor = classColors[m.jobClass] || "#3b82f6";
+                const roleBadgeClass = ROLE_BADGE_CLASSES[m.role] || "bg-slate-800 text-slate-300";
+                const attClass = m.attendance === 'Attending' ? 'text-emerald-400 bg-emerald-950/40 border-emerald-800/40' :
+                                 m.attendance === 'Tentative' ? 'text-amber-400 bg-amber-950/40 border-amber-800/40' :
+                                 'text-red-400 bg-red-950/40 border-red-800/40';
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-3 pl-4 flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-amber-400 text-xs shadow">
+                                ${m.ign.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <span class="font-semibold text-slate-100">${m.ign}</span>
+                                ${m.ign.toLowerCase() === 'vv' ? '<span class="ml-1.5 px-1.5 py-0.2 text-[9px] bg-amber-500 text-slate-950 font-black rounded">OWNER</span>' : ''}
+                            </div>
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border" style="background-color: ${hexColor}20; color: ${hexColor}; border-color: ${hexColor}50">
+                                ${m.jobClass}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 text-[10px] border rounded font-semibold ${roleBadgeClass}">
+                                ${m.role}
+                            </span>
+                        </td>
+                        <td class="p-3 text-center text-slate-400">${m.level}</td>
+                        <td class="p-3 text-right font-bold text-amber-400">${m.power}k</td>
+                        <td class="p-3 text-center">
+                            <span class="px-2 py-0.5 text-[10px] border rounded font-semibold ${attClass}">
+                                ${m.attendance}
+                            </span>
+                        </td>
+                        <td class="p-3 pr-4 text-right admin-only ${isAdmin ? '' : 'hidden'}">
+                            <button onclick="editMember('${m.id}')" class="p-1.5 text-slate-400 hover:text-amber-400 transition"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteMember('${m.id}')" class="p-1.5 text-slate-400 hover:text-red-400 transition ml-1"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openMemberModal(memberId = null) {
+            if (!currentAuth) return;
+            const modal = document.getElementById('memberModal');
+            const form = document.getElementById('memberForm');
+            
+            if (memberId) {
+                const member = members.find(m => m.id === memberId);
+                if (member) {
+                    document.getElementById('modalTitle').innerText = "Edit Member";
+                    document.getElementById('memberId').value = member.id;
+                    document.getElementById('memberIgn').value = member.ign;
+                    document.getElementById('memberClass').value = member.jobClass;
+                    document.getElementById('memberRole').value = member.role;
+                    document.getElementById('memberLevel').value = member.level;
+                    document.getElementById('memberPower').value = member.power;
+                    document.getElementById('memberAttendance').value = member.attendance;
+                }
+            } else {
+                if (members.length >= 150) {
+                    showToast("Roster Full", "Max limit 150 members.", "warning");
+                    return;
+                }
+                document.getElementById('modalTitle').innerText = "Add Guild Member";
+                form.reset();
+                document.getElementById('memberId').value = '';
+                autoAssignRole();
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeMemberModal() {
+            const modal = document.getElementById('memberModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveMember(e) {
+            e.preventDefault();
+            if (!currentAuth) return;
+
+            const id = document.getElementById('memberId').value;
+            const ign = document.getElementById('memberIgn').value.trim();
+            const jobClass = document.getElementById('memberClass').value;
+            const role = document.getElementById('memberRole').value;
+            const level = parseInt(document.getElementById('memberLevel').value);
+            const power = parseInt(document.getElementById('memberPower').value);
+            const attendance = document.getElementById('memberAttendance').value;
+
+            if (id) {
+                const index = members.findIndex(m => m.id === id);
+                if (index !== -1) {
+                    members[index] = { id, ign, jobClass, role, level, power, attendance };
+                    showToast("Member Updated", `${ign} updated.`, "success");
+                }
+            } else {
+                members.push({ id: "m_" + Date.now(), ign, jobClass, role, level, power, attendance });
+                showToast("Member Added", `${ign} added to roster.`, "success");
+            }
+
+            saveToStorage();
+            closeMemberModal();
+            renderAllViews();
+        }
+
+        function editMember(id) {
+            openMemberModal(id);
+        }
+
+        function deleteAllMembers() {
+            if (!currentAuth) return;
+
+            showConfirmModal(
+                "Delete All Members",
+                "Are you sure you want to delete ALL members from the guild roster? This will also clear all party assignments in Google Sheets. This action cannot be undone.",
+                () => {
+                    members = [];
+                    squadAssignments = { league: {}, polarity: {}, woe: {} };
+                    saveToStorage();
+                    renderAllViews();
+                    showToast("Roster Cleared", "All guild members and squad assignments deleted.", "info");
+                },
+                true
+            );
+        }
+
+        function deleteMember(id) {
+            if (!currentAuth) return;
+            const member = members.find(m => m.id === id);
+            if (!member) return;
+
+            showConfirmModal(
+                "Delete Member",
+                `Delete ${member.ign} (${member.jobClass}) from the guild roster? This will also remove them from all assigned squads.`,
+                () => {
+                    members = members.filter(m => m.id !== id);
+                    
+                    ['league', 'polarity', 'woe'].forEach(mode => {
+                        if (squadAssignments[mode]) {
+                            Object.keys(squadAssignments[mode]).forEach(slotKey => {
+                                if (squadAssignments[mode][slotKey] === id) {
+                                    delete squadAssignments[mode][slotKey];
+                                }
+                            });
+                        }
+                    });
+
+                    saveToStorage();
+                    renderAllViews();
+                    showToast("Member Removed", `${member.ign} deleted.`, "info");
+                },
+                true
+            );
+        }
+
+        function renderAllViews() {
+            renderRoster();
+            renderAllSquadTitles();
+            renderLeagueOrganizer();
+            renderPolarityOrganizer();
+            renderWOEOrganizer();
+            renderClassColorsSettings();
+            renderAccountsTable();
+        }
+
+        function generatePartySlotDropdown(mode, slotKey) {
+            const assignedMemberId = squadAssignments[mode][slotKey] || "";
+            const assignedMember = members.find(m => m.id === assignedMemberId);
+            const modeAssignedMap = squadAssignments[mode];
+            const duplicateAssignments = Object.values(modeAssignedMap);
+
+            let optionsHTML = `<option value="">-- Empty Slot --</option>`;
+            const sortedMembers = [...members].sort((a, b) => a.ign.localeCompare(b.ign));
+
+            sortedMembers.forEach(m => {
+                const isAssignedToThisSlot = m.id === assignedMemberId;
+                const isAssignedElsewhere = !isAssignedToThisSlot && duplicateAssignments.includes(m.id);
+                let label = `${m.ign} (${m.jobClass} - ${m.power}k)`;
+                if (isAssignedElsewhere) label += ` ⚠️ Assigned`;
+
+                optionsHTML += `<option value="${m.id}" ${isAssignedToThisSlot ? 'selected' : ''}>${label}</option>`;
+            });
+
+            const disabledAttr = currentAuth === null ? 'disabled' : '';
+
+            let badgeHTML = `<div class="flex items-center justify-between mt-1 text-[11px] text-slate-500 font-medium italic"><span>Empty Slot</span><span>-</span></div>`;
+
+            if (assignedMember) {
+                const hexColor = classColors[assignedMember.jobClass] || "#3b82f6";
+                badgeHTML = `
+                    <div class="flex items-center justify-between mt-1 text-[11px] font-semibold">
+                        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold border" style="background-color: ${hexColor}20; color: ${hexColor}; border-color: ${hexColor}50">
+                            ${assignedMember.jobClass}
+                        </span>
+                        <span class="text-amber-400 font-bold">${assignedMember.power}k</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="bg-slate-950 p-2 rounded-lg border ${assignedMember ? 'border-amber-500/40 bg-slate-900/60' : 'border-slate-800/80'} transition">
+                    <select onchange="handleSlotChange('${mode}', '${slotKey}', this.value)" ${disabledAttr} 
+                        class="w-full bg-slate-900 border border-slate-700/80 rounded px-2 py-1 text-xs text-slate-100 font-bold focus:outline-none focus:border-amber-500">
+                        ${optionsHTML}
+                    </select>
+                    ${badgeHTML}
+                </div>
+            `;
+        }
+
+        function handleSlotChange(mode, slotKey, memberId) {
+            if (!currentAuth) return;
+
+            if (memberId === "") {
+                delete squadAssignments[mode][slotKey];
+            } else {
+                squadAssignments[mode][slotKey] = memberId;
+            }
+
+            saveToStorage();
+            renderAllViews();
+        }
+
+        function renderLeagueOrganizer() {
+            renderSquadGrid('leagueSquadA', 'league', 'squadA', 3);
+            renderSquadGrid('leagueSquadB', 'league', 'squadB', 3);
+            renderSquadGrid('leagueSquadC', 'league', 'squadC', 6);
+
+            updateModeStats('league', [
+                { squadKey: 'squadA', statId: 'squadA-stats', max: 15 },
+                { squadKey: 'squadB', statId: 'squadB-stats', max: 15 },
+                { squadKey: 'squadC', statId: 'squadC-stats', max: 30 }
+            ], 'leagueTotalPower', 'leagueCombatants');
+        }
+
+        function renderPolarityOrganizer() {
+            renderSquadGrid('polarityLight', 'polarity', 'light', 6);
+            renderSquadGrid('polarityDark', 'polarity', 'dark', 6);
+
+            updateModeStats('polarity', [
+                { squadKey: 'light', statId: 'teamLight-stats', max: 30 },
+                { squadKey: 'dark', statId: 'teamDark-stats', max: 30 }
+            ], 'polarityTotalPower', 'polarityCombatants');
+        }
+
+        function renderWOEOrganizer() {
+            renderWOEDivisions();
+            updateModeStats('woe', [{ squadKey: 'woe', statId: null, max: 60 }], 'woeTotalPower', 'woeCombatants');
+        }
+
+        function renderWOEDivisions() {
+            const divs = [
+                { containerId: 'woeDiv1', startParty: 1, endParty: 3, statId: 'woeDiv1-stats' },
+                { containerId: 'woeDiv2', startParty: 4, endParty: 6, statId: 'woeDiv2-stats' },
+                { containerId: 'woeDiv3', startParty: 7, endParty: 9, statId: 'woeDiv3-stats' },
+                { containerId: 'woeDiv4', startParty: 10, endParty: 12, statId: 'woeDiv4-stats' }
+            ];
+
+            divs.forEach(d => {
+                const container = document.getElementById(d.containerId);
+                if (!container) return;
+
+                let divPower = 0;
+                let html = '';
+
+                for (let p = d.startParty; p <= d.endParty; p++) {
+                    let partyPower = 0;
+                    let slotsHTML = '';
+
+                    for (let s = 1; s <= 5; s++) {
+                        const slotKey = `woe_p${p}_s${s}`;
+                        const memberId = squadAssignments.woe[slotKey];
+                        if (memberId) {
+                            const m = members.find(x => x.id === memberId);
+                            if (m) partyPower += m.power;
+                        }
+                        slotsHTML += generatePartySlotDropdown('woe', slotKey);
+                    }
+
+                    divPower += partyPower;
+
+                    html += `
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow-md flex flex-col gap-2">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                                <span class="font-bold text-xs text-red-400">Party ${p}</span>
+                                <span class="text-[11px] font-extrabold text-slate-300">Pwr: ${partyPower}k</span>
+                            </div>
+                            <div class="space-y-2">${slotsHTML}</div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = html;
+                if (document.getElementById(d.statId)) {
+                    document.getElementById(d.statId).innerText = `Total Power: ${divPower}k`;
+                }
+            });
+        }
+
+        function renderSquadGrid(containerId, mode, squadPrefix, numParties) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            let html = '';
+            for (let p = 1; p <= numParties; p++) {
+                let partyPower = 0;
+                let slotsHTML = '';
+
+                for (let s = 1; s <= 5; s++) {
+                    const slotKey = `${squadPrefix}_p${p}_s${s}`;
+                    const memberId = squadAssignments[mode][slotKey];
+                    if (memberId) {
+                        const m = members.find(x => x.id === memberId);
+                        if (m) partyPower += m.power;
+                    }
+                    slotsHTML += generatePartySlotDropdown(mode, slotKey);
+                }
+
+                html += `
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow-md flex flex-col gap-2">
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                            <span class="font-bold text-xs text-amber-400">Party ${p}</span>
+                            <span class="text-[11px] font-extrabold text-slate-300">Pwr: ${partyPower}k</span>
+                        </div>
+                        <div class="space-y-2">${slotsHTML}</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function updateModeStats(mode, squadConfigs, totalPowerId, totalCombatantsId) {
+            let modeTotalPower = 0;
+            let modeTotalFilled = 0;
+
+            squadConfigs.forEach(cfg => {
+                let squadPower = 0;
+                let squadFilled = 0;
+
+                Object.keys(squadAssignments[mode]).forEach(slotKey => {
+                    if (slotKey.startsWith(cfg.squadKey)) {
+                        const mId = squadAssignments[mode][slotKey];
+                        const m = members.find(x => x.id === mId);
+                        if (m) {
+                            squadPower += m.power;
+                            squadFilled++;
+                        }
+                    }
+                });
+
+                modeTotalPower += squadPower;
+                modeTotalFilled += squadFilled;
+
+                if (cfg.statId && document.getElementById(cfg.statId)) {
+                    document.getElementById(cfg.statId).innerText = `Power: ${squadPower}k | Slots: ${squadFilled}/${cfg.max}`;
+                }
+            });
+
+            if (document.getElementById(totalPowerId)) document.getElementById(totalPowerId).innerText = `${modeTotalPower}k`;
+            if (document.getElementById(totalCombatantsId)) document.getElementById(totalCombatantsId).innerText = `${modeTotalFilled} / 60`;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            const target = document.getElementById(`view-${tabName}`);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('flex');
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800";
+            });
+
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            if (activeBtn) {
+                activeBtn.className = "nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 bg-amber-500/10 text-amber-400 border border-amber-500/30";
+            }
+
+            renderAllViews();
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+                members: members,
+                squadAssignments: squadAssignments,
+                classColors: classColors,
+                userAccounts: userAccounts,
+                squadTitles: squadTitles,
+                exportedAt: new Date().toISOString()
+            }, null, 2));
+
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", `NOMERCY_RO_Backup_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+
+            showToast("Backup Exported", "Guild data exported to JSON file.", "success");
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    if (parsed.members && parsed.squadAssignments) {
+                        members = parsed.members;
+                        squadAssignments = parsed.squadAssignments;
+                        if (parsed.classColors) classColors = parsed.classColors;
+                        if (parsed.userAccounts) userAccounts = parsed.userAccounts;
+                        if (parsed.squadTitles) squadTitles = parsed.squadTitles;
+                        saveToStorage();
+                        renderAllViews();
+                        showToast("Import Success", "Data restored from backup & synced to Google Sheets.", "success");
+                    }
+                } catch (err) {
+                    showToast("Import Failed", "Invalid JSON backup file.", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function showToast(title, message, type = "info") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMessage').innerText = message;
+
+            const icon = document.getElementById('toastIcon');
+            if (type === 'success') {
+                icon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i>`;
+                toast.className = "fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 border-l-4 border-emerald-500 text-slate-100 p-4 rounded-r-lg shadow-2xl flex items-start gap-3";
+            } else if (type === 'warning') {
+                icon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>`;
+                toast.className = "fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 border-l-4 border-amber-500 text-slate-100 p-4 rounded-r-lg shadow-2xl flex items-start gap-3";
+            } else if (type === 'error') {
+                icon.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-400"></i>`;
+                toast.className = "fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 border-l-4 border-red-500 text-slate-100 p-4 rounded-r-lg shadow-2xl flex items-start gap-3";
+            } else {
+                icon.innerHTML = `<i class="fa-solid fa-circle-info text-blue-400"></i>`;
+                toast.className = "fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 border-l-4 border-blue-500 text-slate-100 p-4 rounded-r-lg shadow-2xl flex items-start gap-3";
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => hideToast(), 3500);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.add('hidden');
+        }
+
+        // ================= APP INITIALIZATION =================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            populateClassDropdowns();
+
+            if (currentAuth !== null) {
+                showAppScreen();
+            } else {
+                showLoginScreen();
+            }
+
+            // Immediately check and pull fresh live data from Google Sheets
+            triggerBackendFetch(false);
+
+            // Periodically refresh data every 30 seconds so all officers see real-time updates
+            setInterval(() => {
+                if (isAppsScriptEnvironment()) {
+                    triggerBackendFetch(false);
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+</html>
